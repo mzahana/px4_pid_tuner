@@ -1,6 +1,8 @@
 # px4_pid_tuner
 Python script for system identification and tuning of PX4 PID loops based on PX4 logs (ulog only).
 
+It currently tunes the attitude rate loops only, `ROLL_RATE_P`/I/D gains. Similarly, for pitch/yaw. Future updates will allow attitude loop P gain tuning as well as translational velocity and position loops.
+
 # Background
 The python script performs two main tasks.
 1. Identifies a **2nd order system** which will be used for PID tuning. This is done using [SIPPY](https://github.com/CPCLAB-UNIPI/SIPPY) package.
