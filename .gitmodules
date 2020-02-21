@@ -1,0 +1,3 @@
+[submodule "SIPPY"]
+	path = SIPPY
+	url = https://github.com/CPCLAB-UNIPI/SIPPY.git
