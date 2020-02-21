@@ -65,12 +65,12 @@ class PrepData:
         @rolling_window moving average window length
         @Ts resampling times in seconds
         """
-        
+
         self._raw_data = None
         if file is None:
             print("Path to ulg file is not provided")
             return
-        
+
         self._raw_data = px.read_ulog(file)
 
         self._dt = Ts # will be calculated from data time  index, see process_data()
@@ -88,7 +88,7 @@ class PrepData:
         if data not in data_str:
             print("data is not among ['roll', 'pitch', 'yaw']. Defaulting to 'roll' ")
             data = 'roll'
-            
+
         self._data_name = data
 
         # Returned variables
@@ -112,7 +112,7 @@ class PrepData:
         TODO: make some analysis to advise if data is suitable for sysid. Something similar to MATLAB function advice()
         https://www.mathworks.com/help/ident/ref/advice.html
         """
-        
+
         if self._raw_data is None:
             print("No data available!")
             return
@@ -120,7 +120,7 @@ class PrepData:
         print('Processing data for '+self._data_name)
 
         # Extract topics of interest and make data the same length as the controller output t_actuator_controls_0_0
-        d_concat = self._raw_data.concat( topics=['t_actuator_controls_0_0','t_vehicle_attitude_0'],on="t_actuator_controls_0_0")
+        d_concat = self._raw_data.concat( topics=['t_actuator_controls_0_0','t_vehicle_angular_velocity_0'],on="t_actuator_controls_0_0")
 
         # Find _dt from one of t_actuator_controls_0_0 fields e.g. t_actuator_controls_0_0__f_control_0_
         #t = (d_concat['t_actuator_controls_0_0__f_control_0_'].index.total_seconds() * 1e3).values
@@ -139,16 +139,16 @@ class PrepData:
         df_rs.index = [i * self._dt for i in range(len(df_rs.index))]
         self._full_data_length = len(df_rs.index)
 
-        self._trimmed_raw_data = df_rs[['t_actuator_controls_0_0__f_control_0_','t_vehicle_attitude_0__f_rollspeed',
-                            't_actuator_controls_0_0__f_control_1_','t_vehicle_attitude_0__f_pitchspeed',
-                            't_actuator_controls_0_0__f_control_2_','t_vehicle_attitude_0__f_yawspeed']]
+        self._trimmed_raw_data = df_rs[['t_actuator_controls_0_0__f_control_0_','t_vehicle_angular_velocity_0__f_xyz_0_',
+                            't_actuator_controls_0_0__f_control_1_','t_vehicle_angular_velocity_0__f_xyz_1_',
+                            't_actuator_controls_0_0__f_control_2_','t_vehicle_angular_velocity_0__f_xyz_2_']]
 
         self._trimmed_raw_data.rename(columns={'t_actuator_controls_0_0__f_control_0_':'ATTC_Roll',
                                 't_actuator_controls_0_0__f_control_1_':'ATTC_Pitch',
                                 't_actuator_controls_0_0__f_control_2_':'ATTC_Yaw',
-                                't_vehicle_attitude_0__f_rollspeed':'rollspeed',
-                                't_vehicle_attitude_0__f_pitchspeed':'pitchspeed',
-                                't_vehicle_attitude_0__f_yawspeed':'yawspeed'}, 
+                                't_vehicle_angular_velocity_0__f_xyz_0_':'rollspeed',
+                                't_vehicle_angular_velocity_0__f_xyz_1_':'pitchspeed',
+                                't_vehicle_angular_velocity_0__f_xyz_2_':'yawspeed'},
                         inplace=True)
 
         self._full_data_length = len(df_rs.index)
@@ -160,16 +160,16 @@ class PrepData:
         # roll_rate control output: t_actuator_controls_0_0__f_control_0_
         # pitch_rate control output: t_actuator_controls_0_0__f_control_1_
         # yaw_rate control output: t_actuator_controls_0_0__f_control_2_
-        
+
         if self._data_name == 'roll':
             data_str_u = 't_actuator_controls_0_0__f_control_0_'
-            data_str_y = 't_vehicle_attitude_0__f_rollspeed'
+            data_str_y = 't_vehicle_angular_velocity_0__f_xyz_0_'
         elif self._data_name == 'pitch':
             data_str_u = 't_actuator_controls_0_0__f_control_1_'
-            data_str_y = 't_vehicle_attitude_0__f_pitchspeed'
+            data_str_y = 't_vehicle_angular_velocity_0__f_xyz_1_'
         elif self._data_name == 'yaw':
             data_str_u = 't_actuator_controls_0_0__f_control_2_'
-            data_str_y = 't_vehicle_attitude_0__f_yawspeed'
+            data_str_y = 't_vehicle_angular_velocity_0__f_xyz_2_'
 
         raw_u = df_rs[data_str_u] # rate controller output
         raw_u_v = raw_u.values # ndarray
@@ -177,7 +177,7 @@ class PrepData:
         #raw_u_filtered = raw_u - raw_u_bias
         raw_u_filtered = raw_u_bias
         raw_u_filtered_v = raw_u_filtered.values # ndarray
-        raw_u_filtered_v = np.expand_dims(raw_u_filtered_v, axis=0) 
+        raw_u_filtered_v = np.expand_dims(raw_u_filtered_v, axis=0)
         raw_u_v = np.expand_dims(raw_u_v, axis=0)
 
         #Feedback signals
@@ -240,7 +240,7 @@ class PrepData:
             plt.title(self._data_name+' rate raw input and output')
             plt.legend(['Output', 'Input'])
             plt.grid(True)
-            
+
             plt.subplot(2, 2, 4, sharex=ax1)
             plt.plot(self._t[0,self._data_start_ind:self._data_end_ind], self._y_filtered[0,self._data_start_ind:self._data_end_ind])
             plt.plot(self._t[0,self._data_start_ind:self._data_end_ind], self._u_filtered[0,self._data_start_ind:self._data_end_ind])
@@ -250,7 +250,7 @@ class PrepData:
             plt.legend(['Output', 'Input'])
             plt.grid(True)
 
-            
+
             plt.show()
 
     def get_data(self):
@@ -318,7 +318,7 @@ class PX4SYSID:
             sys_id = system_identification(self._y.T, self._u[0], method, ARMAX_orders=[num_poles,1,1,0],ARMAX_max_iterations=300, tsample=self._Ts, centering='MeanVal')
 
             print(sys_id.G)
-            
+
             if self._verbose:
                 print(sys_id.G)
                 print("System poles of discrete G: ",cnt.pole(sys_id.G))
@@ -332,8 +332,8 @@ class PX4SYSID:
 
             if self._verbose:
                 print("Continuous tf:" , G_cont)
-            
-        
+
+
             # Convert to state space, because ARMAX gives transfer function
             ss_roll = cnt.tf2ss(sys_id.G)
             A = np.asarray(ss_roll.A)
@@ -449,7 +449,7 @@ class PX4PIDDesign:
             print("Gains are not computed yet.")
 
         return self._K
-        
+
 
     def set_weights(self, q=[1.0, 1.0, 1.0], r=1.0):
         self._q = q
@@ -485,7 +485,7 @@ class PX4PIDDesign:
         # Calculate Ki_bar, Kp_bar
         Kp_bar = np.array( [ F[0][0:n_x] ] )
         Ki_bar = np.array( [ F[0][n_x:] ] )
-        
+
         if self._verbose:
             print("Kp_bar", Kp_bar)
             print("Ki_bar", Ki_bar)
@@ -516,7 +516,7 @@ class PX4PIDDesign:
         d_tc = 1./125. # Derivative time constant at nyquist freq
         p_tf = self._K[0]
         i_tf = self._K[1]*cnt.tf([1],[1,0])
-        d_tf = self._K[2]*cnt.tf([1,0],[d_tc,1]) 
+        d_tf = self._K[2]*cnt.tf([1,0],[d_tc,1])
         pid_tf = cnt.parallel(p_tf, i_tf, d_tf)
         open_loop_tf = cnt.series(pid_tf, G_plant)
         closedLoop_tf = cnt.feedback(open_loop_tf,1)
@@ -536,7 +536,7 @@ class PX4PIDDesign:
             print("[PID Design] Calculating PID gains")
         pid_tf, closedLoop_tf = self.pid_design()
 
-        
+
 
         end_time = 5  # [s]
         npts = int(old_div(end_time, self._dt)) + 1
@@ -547,7 +547,7 @@ class PX4PIDDesign:
 
         return T, u, yout
 
-             
+
     def plotStepResponse(self):
         """
         Plots the step response of the closed loop, using gains in K.
@@ -605,7 +605,7 @@ class GeneticOptimization:
 
         toolbox = base.Toolbox()
 
-        # Weight generator 
+        # Weight generator
         #                      define 'gain_value' to be an attribute ('gene')
         #                      which corresponds to non-negative real numbers sampled uniformly
         #                      from the range [0,100]
@@ -614,7 +614,7 @@ class GeneticOptimization:
         # Structure initializers
         #                         define 'individual' to be an individual
         #                         consisting of 4 'weight_value' elements ('genes')
-        toolbox.register("individual", tools.initRepeat, creator.Individual, 
+        toolbox.register("individual", tools.initRepeat, creator.Individual,
             toolbox.gain_value, 4)
 
         # define the population to be a list of individuals
@@ -648,9 +648,9 @@ class GeneticOptimization:
         #
         # MUTPB is the probability for mutating an individual
         CXPB, MUTPB = 0.5, 0.2
-        
+
         print(" [GA] Start of evolution")
-        
+
         # Evaluate the entire population
         fitnesses = list(map(toolbox.evaluate, pop))
         for ind, fit in zip(pop, fitnesses):
@@ -658,24 +658,24 @@ class GeneticOptimization:
         if self._verbose:
             print(" [GA] Evaluated %i individuals" % len(pop))
 
-        # Extracting all the fitnesses of 
+        # Extracting all the fitnesses of
         fits = [ind.fitness.values[0] for ind in pop]
 
         # Variable keeping track of the number of generations
         g = 0
-        
+
         # Begin the evolution
         print(" [GA] evaluating {} generations".format(self._num_gen))
         while g < self._num_gen:
             # A new generation
             g = g + 1
             print(" [GA] -------------------------- Generation %i --------------------------" % g)
-            
+
             # Select the next generation individuals
             offspring = toolbox.select(pop, len(pop))
             # Clone the selected individuals
             offspring = list(map(toolbox.clone, offspring))
-        
+
             # Apply crossover and mutation on the offspring
             for child1, child2 in zip(offspring[::2], offspring[1::2]):
 
@@ -694,7 +694,7 @@ class GeneticOptimization:
                 if random.random() < MUTPB:
                     toolbox.mutate(mutant)
                     del mutant.fitness.values
-        
+
             # Evaluate the individuals with an invalid fitness
             invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
             fitnesses = map(toolbox.evaluate, invalid_ind)
@@ -702,26 +702,26 @@ class GeneticOptimization:
                 ind.fitness.values = fit
             if self._verbose:
                 print(" [GA] Evaluated %i individuals" % len(invalid_ind))
-            
+
             # The population is entirely replaced by the offspring
             pop[:] = offspring
-            
+
             # Gather all the fitnesses in one list and print the stats
             fits = [ind.fitness.values[0] for ind in pop]
-            
+
             length = len(pop)
             mean = sum(fits) / length
             sum2 = sum(x*x for x in fits)
             std = abs(sum2 / length - mean**2)**0.5
-            
+
             if self._verbose:
                 print(" [GA] Min %s" % min(fits))
                 print(" [GA] Max %s" % max(fits))
                 print(" [GA] Avg %s" % mean)
                 print(" [GA] Std %s" % std)
-        
+
         print(" [GA] -- End of (successful) evolution --")
-        
+
         best_ind = tools.selBest(pop, 1)[0]
         self._best_sol = best_ind
         #print("Best individual is %s, %s" % (best_ind, best_ind.fitness.values))
@@ -736,7 +736,7 @@ class GeneticOptimization:
         """
         Computes cost associated with system response (e.g. step response) of the closed loop, using LQR weights W.
         The cost to minimize is the time domain performance index defined in Equaiton 22 in
-        # https://www.sciencedirect.com/science/article/pii/S0307904X12005197 
+        # https://www.sciencedirect.com/science/article/pii/S0307904X12005197
         # sum_t(w_1 * t * err_t^2 + w_2 * u_t^2) * dt
         # err = setpoint_t - ouput_t
 
@@ -830,7 +830,7 @@ def main(args):
             best_p = 0
             for i in range(int(n_intervals)):
                 p = (i+1)*subspace_p_increment
-                try: 
+                try:
                     sysid = PX4SYSID(t, u, y, use_subspace =True, subspace_method='N4SID', Ts=dt, u_name='input', y_name='ouput', subspace_p=p, plot = False)
                     A,B,C,D,_, fit, zeros = sysid.get_data()
                 except:
@@ -854,7 +854,7 @@ def main(args):
         print(" [SYSID] WARNING Poor fitting %s. Try different data window with more dynamics!" %best_fit)
         print("Not proceeding with control tuning.")
         return
-    
+
     ################## PID design ##################
     print(" --------------- Finding optimal gains using Genetic Optimization ---------------")
     ga = GeneticOptimization(best_A, best_B, best_C, best_D, num_pop = 25, num_gen = 10, w1=0.7, w2=0.3, dt=dt)
@@ -864,8 +864,8 @@ def main(args):
 
     pid = PX4PIDDesign(best_A, best_B, best_C, best_D)
     pid.set_weights(q,r)
-    pid.plotStepResponse()  
-    
+    pid.plotStepResponse()
+
 
 def str2bool(v):
     """
@@ -878,7 +878,7 @@ def str2bool(v):
     elif v.lower() in ('no', 'false', 'f', 'n', '0'):
         return False
     else:
-        raise argparse.ArgumentTypeError('Boolean value expected.') 
+        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 if __name__ == "__main__":
     # Parse command line arguments
