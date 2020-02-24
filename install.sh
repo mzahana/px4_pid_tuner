@@ -11,31 +11,34 @@ fi
 set -e
 
 sudo apt install libgeos-3* libgeos-dev python3-tk gfortran cmake libssl-dev libblas-dev liblapack-dev -y
+sudo apt install python3-pip python3-numpy -y
 
-pip3 install https://github.com/matplotlib/basemap/archive/master.zip
-pip3 install numpy
-pip3 install px4tools
-pip3 install harold
+#pip3 install numpy --user
+
+pip3 install https://github.com/matplotlib/basemap/archive/master.zip  --user
+pip3 install numpy --user
+pip3 install px4tools --user
+pip3 install harold --user
 
 # Dependencies for SIPPY
-pip3 install control
-pip3 install scipy
+pip3 install control --user
+pip3 install scipy --user
 
 # needed for slycot
-pip3 install scikit-build
-pip3 install slycot
-pip3 install future
-pip3 install matplotlib
+pip3 install scikit-build --user
+pip3 install slycot --user
+pip3 install future --user
+pip3 install matplotlib --user
 
 # Genetic algorithm package
-pip3 install deap
+pip3 install deap --user
 
 
 # Install SIPPY from github
-git submodule init
-git submodule update
+git submodule init 
+git submodule update 
 cd SIPPY
-sudo python3 setup.py install
+python3 setup.py install --user
 cd -
 
 
