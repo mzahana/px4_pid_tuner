@@ -787,7 +787,8 @@ def main(args):
         end_i = -1
     else:
         end_i = int(end_t/dt)
-    data  = PrepData( file=args["file"], data_start_ind = start_i, data_end_ind = end_i, rolling_window_y=50, rolling_window_u=50, Ts = dt, data=args["axis"], plot=True)
+    ma=int(args["movingAverage"])
+    data  = PrepData( file=args["file"], data_start_ind = start_i, data_end_ind = end_i, rolling_window_y=ma, rolling_window_u=ma, Ts = dt, data=args["axis"], plot=True)
     data.process_data()
     full_data_len, t, u, y, dt = data.get_data()
 
@@ -844,23 +845,23 @@ def main(args):
                     best_zero = min(zeros)
                     best_p = p
 
-        print("Best fit = {}".format(best_fit))
-
-        sysid = PX4SYSID(best_t, best_u, best_y, use_subspace =True, subspace_method='N4SID', Ts=dt, u_name='best_input', y_name='best_ouput', subspace_p=best_p, plot = True)
-        _,_,_,_,tf, _, _ = sysid.get_data()
-        print("Identified Transfer function: ", tf)
-
     if best_fit < 0.75 or np.isnan(best_fit):
         print(" [SYSID] WARNING Poor fitting %s. Try different data window with more dynamics!" %best_fit)
         print("Not proceeding with control tuning.")
         return
+
+
+    sysid = PX4SYSID(best_t, best_u, best_y, use_subspace =True, subspace_method='N4SID', Ts=dt, u_name='best_input', y_name='best_ouput', subspace_p=best_p, plot = True)
+    _,_,_,_,tf, _, _ = sysid.get_data()
+    print("Identified Transfer function: ", tf)
 
     ################## PID design ##################
     print(" --------------- Finding optimal gains using Genetic Optimization ---------------")
     ga = GeneticOptimization(best_A, best_B, best_C, best_D, num_pop = 25, num_gen = 10, w1=0.7, w2=0.3, dt=dt)
     q,r = ga.run_ga()
 
-    print("optimal {} rate PID gains {}".format(args["axis"], ga.get_gains()))
+    # print("optimal {} rate PID gains {}", format(args["axis"], ga.get_gains()))
+    print(ga.get_gains())
 
     pid = PX4PIDDesign(best_A, best_B, best_C, best_D)
     pid.set_weights(q,r)
@@ -900,7 +901,8 @@ if __name__ == "__main__":
         help=" End time in seconds, if auto batch selection is false", default=-1.0)
     ap.add_argument("-dt", "--samplingTime", required=False,
         help=" Data sampling time in seconds", default=0.004)
-
+    ap.add_argument("-ma", "--movingAverage", required=False,
+        help=" Moving Average filter samples (default 15)", default=15)
     args = vars(ap.parse_args())
 
 
