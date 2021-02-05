@@ -2,7 +2,7 @@
 """
 Python script for system identification and PID tuning of PX4 PID loops using PX4 logs (ulog only).
 @author Mohamed Abdelkader
-@email mohamedashraf213@gmail.com
+@email mohamedashraf123@gmail.com
 @year 2019
 
 USE IT AT YOUR OWN RISK!
