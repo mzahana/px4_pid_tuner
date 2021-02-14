@@ -10,9 +10,10 @@ fi
 # ensure the script exits on error
 set -e
 
+sudo apt update
 sudo apt install libgeos-3* libgeos-dev python3-tk gfortran cmake libssl-dev libblas-dev liblapack-dev -y
 sudo apt install python3-pip python3-numpy -y
-sudo apt-get install python3-setuptools -y
+sudo apt install python3-setuptools -y
 
 #pip3 install numpy --user
 
