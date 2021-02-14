@@ -16,7 +16,7 @@ sudo apt install python3-pip python3-numpy -y
 sudo apt install python3-setuptools -y
 
 #pip3 install numpy --user
-
+pip3 install Cython --user
 pip3 install https://github.com/matplotlib/basemap/archive/master.zip  --user
 
 pip3 install px4tools --user
