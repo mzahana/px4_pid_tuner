@@ -17,10 +17,16 @@ sudo apt-get install python3-pip python3-numpy -y
 sudo apt-get install python3-setuptools -y
 #sudo apt-get install -y python3-mpltoolkits.basemap
 
-#pip3 install numpy --user
-#pip3 install Cython --user
-#pip3 install pyproj --user
-pip3 install https://github.com/matplotlib/basemap/archive/master.zip  --user
+pip3 install Cython --user
+# pyproj
+pip3 install --upgrade --user matplotlib numpy
+#pip3 install https://github.com/matplotlib/basemap/archive/master.zip  --user
+
+# needed for slycot
+pip3 install scikit-build --user
+#pip3 install slycot --user
+pip3 install --user slycot==0.3.5.0
+pip3 install future --user
 
 pip3 install px4tools --user
 pip3 install harold --user
@@ -29,11 +35,6 @@ pip3 install harold --user
 pip3 install control --user
 pip3 install scipy --user
 
-# needed for slycot
-pip3 install scikit-build --user
-pip3 install slycot --user
-pip3 install future --user
-pip3 install matplotlib --user
 
 # Genetic algorithm package
 pip3 install deap --user

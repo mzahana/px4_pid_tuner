@@ -275,7 +275,7 @@ class PX4SYSID:
     """
     Uses SIPPY package to do sys ID and provide a 2nd order system in continuous time domain
     """
-    def __init__(self, t, u, y, use_subspace =True, subspace_method='N4SID', subspace_p=250, Ts=0.001, u_name='input', y_name='ouput', plot = True, verbose = False):
+    def __init__(self, t, u, y, use_subspace =True, subspace_method='N4SID', subspace_p=250, Ts=0.001, u_name='input', y_name='ouput', plot = True, verbose = True):
         """
         @t: array of time samples [seconds]
         @u input array
@@ -427,7 +427,7 @@ class PX4PIDDesign:
     Class for LQR-based PID design. Currently, for a 2nd order system only
     Reference: https://ieeexplore.ieee.org/document/4242954
     """
-    def __init__(self, A, B, C, D, q=[1., 1. , 1.], r = 1.0, dt=0.001 , verobse=False):
+    def __init__(self, A, B, C, D, q=[1., 1. , 1.], r = 1.0, dt=0.001 , verobse=True):
         self._A = A
         self._B = B
         self._C = C
@@ -851,9 +851,9 @@ def main(args):
         return
 
 
-    sysid = PX4SYSID(best_t, best_u, best_y, use_subspace =True, subspace_method='N4SID', Ts=dt, u_name='best_input', y_name='best_ouput', subspace_p=best_p, plot = True)
-    _,_,_,_,tf, _, _ = sysid.get_data()
-    print("Identified Transfer function: ", tf)
+    #sysid = PX4SYSID(best_t, best_u, best_y, use_subspace =True, subspace_method='N4SID', Ts=dt, u_name='best_input', y_name='best_ouput', subspace_p=best_p, plot = True)
+    #_,_,_,_,tf, _, _ = sysid.get_data()
+    #print("Identified Transfer function: ", tf)
 
     ################## PID design ##################
     print(" --------------- Finding optimal gains using Genetic Optimization ---------------")
