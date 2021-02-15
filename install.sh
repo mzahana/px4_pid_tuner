@@ -11,9 +11,11 @@ fi
 set -e
 
 sudo apt update
-sudo apt install libgeos-3* libgeos-dev python3-tk gfortran cmake libssl-dev libblas-dev liblapack-dev -y
-sudo apt install python3-pip python3-numpy -y
-sudo apt install python3-setuptools -y
+sudo apt-get install -y libgeos-3* libgeos-c1* libgeos-dev
+sudo apt-get install python3-tk gfortran cmake libssl-dev libblas-dev liblapack-dev -y
+sudo apt-get install python3-pip python3-numpy -y
+sudo apt-get install python3-setuptools -y
+#sudo apt-get install -y python3-mpltoolkits.basemap
 
 #pip3 install numpy --user
 #pip3 install Cython --user
@@ -43,5 +45,4 @@ git submodule update
 cd SIPPY
 python3 setup.py install --user
 cd -
-
 
