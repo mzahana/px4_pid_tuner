@@ -38,6 +38,10 @@ pip3 install matplotlib --user
 # Genetic algorithm package
 pip3 install deap --user
 
+pip3 uninstall pandas
+# There is an issue with later versions of pandas
+pip3 install pandas==0.25.3 --user
+
 
 # Install SIPPY from github
 git submodule init 
