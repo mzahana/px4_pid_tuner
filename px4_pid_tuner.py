@@ -120,7 +120,7 @@ class PrepData:
         print('Processing data for '+self._data_name)
 
         # Extract topics of interest and make data the same length as the controller output t_actuator_controls_0_0
-        d_concat = self._raw_data.concat( topics=['t_actuator_controls_0_0','t_vehicle_attitude_0'],on="t_actuator_controls_0_0")
+        d_concat = self._raw_data.concat( topics=['t_actuator_controls_0_0','t_vehicle_angular_velocity_0'],on="t_actuator_controls_0_0")
 
         # Find _dt from one of t_actuator_controls_0_0 fields e.g. t_actuator_controls_0_0__f_control_0_
         #t = (d_concat['t_actuator_controls_0_0__f_control_0_'].index.total_seconds() * 1e3).values
@@ -139,16 +139,17 @@ class PrepData:
         df_rs.index = [i * self._dt for i in range(len(df_rs.index))]
         self._full_data_length = len(df_rs.index)
 
-        self._trimmed_raw_data = df_rs[['t_actuator_controls_0_0__f_control_0_','t_vehicle_attitude_0__f_rollspeed',
-                            't_actuator_controls_0_0__f_control_1_','t_vehicle_attitude_0__f_pitchspeed',
-                            't_actuator_controls_0_0__f_control_2_','t_vehicle_attitude_0__f_yawspeed']]
+        self._trimmed_raw_data = df_rs[[
+                            't_actuator_controls_0_0__f_control_0_','t_vehicle_angular_velocity_0__f_xyz_0_',
+                            't_actuator_controls_0_0__f_control_1_','t_vehicle_angular_velocity_0__f_xyz_1_',
+                            't_actuator_controls_0_0__f_control_2_','t_vehicle_angular_velocity_0__f_xyz_2_']]
 
         self._trimmed_raw_data.rename(columns={'t_actuator_controls_0_0__f_control_0_':'ATTC_Roll',
                                 't_actuator_controls_0_0__f_control_1_':'ATTC_Pitch',
                                 't_actuator_controls_0_0__f_control_2_':'ATTC_Yaw',
-                                't_vehicle_attitude_0__f_rollspeed':'rollspeed',
-                                't_vehicle_attitude_0__f_pitchspeed':'pitchspeed',
-                                't_vehicle_attitude_0__f_yawspeed':'yawspeed'}, 
+                                't_vehicle_angular_velocity_0__f_xyz_0_':'rollspeed',
+                                't_vehicle_angular_velocity_0__f_xyz_1_':'pitchspeed',
+                                't_vehicle_angular_velocity_0__f_xyz_2_':'yawspeed'}, 
                         inplace=True)
 
         self._full_data_length = len(df_rs.index)
@@ -163,13 +164,13 @@ class PrepData:
         
         if self._data_name == 'roll':
             data_str_u = 't_actuator_controls_0_0__f_control_0_'
-            data_str_y = 't_vehicle_attitude_0__f_rollspeed'
+            data_str_y = 't_vehicle_angular_velocity_0__f_xyz_0_'
         elif self._data_name == 'pitch':
             data_str_u = 't_actuator_controls_0_0__f_control_1_'
-            data_str_y = 't_vehicle_attitude_0__f_pitchspeed'
+            data_str_y = 't_vehicle_angular_velocity_0__f_xyz_1_'
         elif self._data_name == 'yaw':
             data_str_u = 't_actuator_controls_0_0__f_control_2_'
-            data_str_y = 't_vehicle_attitude_0__f_yawspeed'
+            data_str_y = 't_vehicle_angular_velocity_0__f_xyz_2_'
 
         raw_u = df_rs[data_str_u] # rate controller output
         raw_u_v = raw_u.values # ndarray
@@ -814,7 +815,7 @@ def main(args):
 
 
         ################## SYS ID ##################
-        best_fit = fit = 0.0
+        best_fit = fit = None
         best_A, best_B, best_C, best_D = None, None, None, None
         best_t, best_u, best_y = None, None, None
         best_zero = np.inf
@@ -837,7 +838,7 @@ def main(args):
                     print("Bad batch...... skipping")
                     break
 
-                if fit > best_fit and min(zeros) < 0.0 : # best_zero:
+                if (best_fit is None or fit > best_fit) and min(zeros) < 0.0 : # best_zero:
                     best_A, best_B, best_C, best_D = A, B, C, D
                     best_t, best_u, best_y = t, u, y
                     best_fit = fit
