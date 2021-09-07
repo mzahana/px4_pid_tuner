@@ -1,0 +1,15 @@
+numpy
+px4tools
+harold
+
+# Dependencies for SIPPY
+control
+scipy
+# needed for slycot
+scikit-build
+slycot
+future
+matplotlib
+deap
+
+-e git+https://github.com/matplotlib/basemap/archive/master.zip
